@@ -149,7 +149,6 @@
 
     function declareWinner() {
   const normalized = angle % (2 * Math.PI);
-  // Adjust to account for 12 o'clock needle
   const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI);
   const index = Math.floor(adjusted / arc) % names.length;
   const winner = names[index];
@@ -168,6 +167,7 @@
   </script>
 </body>
 </html>
+
 
 
 
