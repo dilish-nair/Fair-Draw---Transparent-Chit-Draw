@@ -1,213 +1,159 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FairDraw - Transparent Chit Draw</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fair Draw - Transparent Chit Draw</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
     body {
       font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      margin: 0;
       padding: 10px;
       background-color: #f4f4f4;
     }
     h1 {
-      margin-bottom: 10px;
+      font-size: 24px;
       text-align: center;
-      font-size: 20px;
+    }
+    textarea {
+      width: 100%;
+      max-width: 400px;
+      height: 100px;
+      margin-bottom: 10px;
     }
     canvas {
-      max-width: 100%;
+      max-width: 90vw;
     }
-    #controls {
-      margin-top: 15px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    #participants {
-      margin: 10px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      max-width: 300px;
-    }
-    #participantInput {
-      width: 100%;
-      max-width: 300px;
-      height: 100px;
-      padding: 10px;
-      font-size: 14px;
-      resize: vertical;
-    }
-    #addBtn {
-      margin-top: 8px;
-      padding: 6px 12px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    #resetBtn, #spin {
-      padding: 8px 16px;
-      font-size: 14px;
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
       cursor: pointer;
     }
     #needle {
       position: absolute;
-      top: 5px;
+      top: 55px;
       left: 50%;
-      transform: translateX(-50%);
       width: 4px;
       height: 40px;
-      background-color: red;
-      z-index: 10;
-      border-radius: 2px;
+      background: red;
+      z-index: 2;
+      transform: translateX(-50%);
     }
-    @media (max-width: 600px) {
-      #participantInput {
-        width: 100%;
-      }
+    #wheel-container {
+      position: relative;
+      display: inline-block;
     }
   </style>
 </head>
 <body>
-  <h1>FairDraw - Transparent Chit Draw</h1>
-  <div id="needle"></div>
-  <canvas id="wheel" width="300" height="300"></canvas>  <div id="participants">
-    <textarea id="participantInput" placeholder="Enter one participant per line: \n01 - Ravi\n02 - Neha\n..."></textarea>
-    <button id="addBtn">Add Participants</button>
-  </div>  <div id="controls">
-    <button id="spin">Spin (30 sec)</button>
-    <button id="resetBtn">Reset</button>
-  </div><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/gear-spin-1.mp3" preload="auto"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
+  <h1>Fair Draw - Transparent Chit Draw</h1>
+  <textarea id="names" placeholder="Enter participant names, one per line"></textarea><br>
+  <button onclick="setupWheel()">Set Participants</button>
+  <div id="wheel-container">
+    <div id="needle"></div>
+    <canvas id="wheel" width="400" height="400"></canvas>
+  </div>
+  <button onclick="spinWheel()">Spin</button>
+  <button onclick="resetWheel()">Reset</button>
+
+  <audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio>
+  <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
   <script>
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
-    const spinBtn = document.getElementById("spin");
-    const resetBtn = document.getElementById("resetBtn");
-    const addBtn = document.getElementById("addBtn");
-    const participantInput = document.getElementById("participantInput");
-    const spinSound = document.getElementById("spinSound");
-    const winSound = document.getElementById("winSound");
-
-    let participants = [];
+    const canvas = document.getElementById('wheel');
+    const ctx = canvas.getContext('2d');
     let angle = 0;
-    let spinning = false;
+    let participants = [];
+    let arc = 0;
+    const spinSound = document.getElementById('spinSound');
+    const winSound = document.getElementById('winSound');
 
-    addBtn.onclick = () => {
-      const lines = participantInput.value.trim().split("\n");
-      participants = lines.filter(line => line.trim() !== "");
+    function setupWheel() {
+      const input = document.getElementById('names').value.trim();
+      participants = input.split('\\n').map(s => s.trim()).filter(s => s);
+      arc = (2 * Math.PI) / participants.length;
       drawWheel();
-    };
-
-    resetBtn.onclick = () => {
-      participants = [];
-      participantInput.value = "";
-      drawWheel();
-    };
+    }
 
     function drawWheel() {
       const radius = canvas.width / 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      participants.forEach((name, i) => {
+        const start = angle + i * arc;
+        const end = start + arc;
 
-      if (participants.length === 0) return;
-      const arc = (2 * Math.PI) / participants.length;
-
-      for (let i = 0; i < participants.length; i++) {
-        const startAngle = i * arc;
+        // Fill segment
         ctx.beginPath();
         ctx.moveTo(radius, radius);
-        ctx.arc(radius, radius, radius, startAngle, startAngle + arc);
-        ctx.closePath();
-        ctx.fillStyle = i % 2 === 0 ? "#fdd835" : "#ff7043";
+        ctx.arc(radius, radius, radius, start, end);
+        ctx.fillStyle = `hsl(${(i * 360) / participants.length}, 100%, 70%)`;
         ctx.fill();
-        ctx.strokeStyle = "#000";
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Text
         ctx.save();
         ctx.translate(radius, radius);
-        ctx.rotate(startAngle + arc / 2);
-        ctx.fillStyle = "black";
-        ctx.font = "bold 12px Arial";
+        ctx.rotate(start + arc / 2);
         ctx.textAlign = "right";
-        ctx.fillText(participants[i], radius - 10, 0);
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.fillText(name, radius - 10, 5);
         ctx.restore();
-      }
+      });
     }
 
     function spinWheel() {
-      if (participants.length === 0 || spinning) return;
-      spinning = true;
-      let duration = 30000;
-      let start = Date.now();
-      let spins = Math.random() * 5 + 5;
-      let totalAngle = spins * 2 * Math.PI;
-
-      spinSound.currentTime = 0;
       spinSound.play();
+      const duration = 30000;
+      const spins = Math.random() * 3 + 4;
+      const targetAngle = angle + spins * 2 * Math.PI;
+      const start = performance.now();
 
-      function animate() {
-        let now = Date.now();
-        let elapsed = now - start;
-        let progress = elapsed / duration;
-        if (progress > 1) progress = 1;
-
-        angle = totalAngle * easeOutCubic(progress);
-        renderWheel(angle);
-
-        if (progress < 1) {
+      function animate(now) {
+        const elapsed = now - start;
+        const t = Math.min(elapsed / duration, 1);
+        const eased = easeOutQuad(t);
+        angle = targetAngle * eased;
+        drawWheel();
+        if (t < 1) {
           requestAnimationFrame(animate);
         } else {
           spinSound.pause();
           spinSound.currentTime = 0;
-          spinning = false;
           declareWinner();
         }
       }
-
-      animate();
+      requestAnimationFrame(animate);
     }
 
-    function renderWheel(a) {
-      ctx.save();
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate(a);
-      ctx.translate(-canvas.width / 2, -canvas.height / 2);
-      drawWheel();
-      ctx.restore();
+    function easeOutQuad(t) {
+      return t * (2 - t);
     }
 
     function declareWinner() {
-      const arc = (2 * Math.PI) / participants.length;
-      const finalAngle = (angle % (2 * Math.PI));
-      const index = Math.floor(((2 * Math.PI - finalAngle + arc / 2) % (2 * Math.PI)) / arc);
+      const finalAngle = angle % (2 * Math.PI);
+      const correctedAngle = (2 * Math.PI - finalAngle + Math.PI / 2) % (2 * Math.PI);
+      const index = Math.floor(correctedAngle / arc) % participants.length;
       const winner = participants[index];
-
       winSound.play();
-      setTimeout(() => {
-        alert(`🎉 Congratulations! The winner is: ${winner}`);
-      }, 500);
+      setTimeout(() => alert(`🎉 Winner: ${winner} 🎉`), 100);
     }
 
-    function easeOutCubic(t) {
-      return 1 - Math.pow(1 - t, 3);
+    function resetWheel() {
+      angle = 0;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      participants = [];
+      document.getElementById('names').value = '';
     }
-
-    spinBtn.onclick = spinWheel;
-    drawWheel();
-  </script></body>
+  </script>
+</body>
 </html>
+
 
 
