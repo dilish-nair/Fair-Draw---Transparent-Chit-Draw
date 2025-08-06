@@ -40,9 +40,11 @@
       flex-direction: column;
       align-items: center;
       width: 100%;
+      max-width: 300px;
     }
     #participantInput {
-      width: 90%;
+      width: 100%;
+      max-width: 300px;
       height: 100px;
       padding: 10px;
       font-size: 14px;
@@ -61,14 +63,14 @@
     }
     #needle {
       position: absolute;
-      top: 8%;
+      top: 35px;
       left: 50%;
-      transform: translateX(-50%) rotate(180deg);
+      transform: translateX(-50%) rotate(0deg);
       width: 0;
       height: 0;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-top: 20px solid red;
+      border-bottom: 20px solid red;
       z-index: 10;
     }
     @media (max-width: 600px) {
@@ -87,7 +89,7 @@
   </div>  <div id="controls">
     <button id="spin">Spin (30 sec)</button>
     <button id="resetBtn">Reset</button>
-  </div><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-03.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+  </div><audio id="spinSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_78b28f97f4.mp3?filename=clicking-13695.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
   <script>
     const canvas = document.getElementById("wheel");
@@ -102,6 +104,7 @@
     let participants = [];
     let angle = 0;
     let spinning = false;
+    let spinInterval;
 
     addBtn.onclick = () => {
       const lines = participantInput.value.trim().split("\n");
@@ -131,6 +134,7 @@
         ctx.fillStyle = i % 2 === 0 ? "#fdd835" : "#ff7043";
         ctx.fill();
         ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.save();
@@ -153,6 +157,11 @@
       let totalAngle = spins * 2 * Math.PI;
 
       spinSound.play();
+      spinInterval = setInterval(() => {
+        spinSound.currentTime = 0;
+        spinSound.play();
+      }, 300);
+
       function animate() {
         let now = Date.now();
         let elapsed = now - start;
@@ -165,8 +174,7 @@
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          spinSound.pause();
-          spinSound.currentTime = 0;
+          clearInterval(spinInterval);
           spinning = false;
           declareWinner();
         }
@@ -187,8 +195,8 @@
 
     function declareWinner() {
       const arc = (2 * Math.PI) / participants.length;
-      const finalAngle = angle % (2 * Math.PI);
-      const index = Math.floor((finalAngle + arc / 2) / arc) % participants.length;
+      const finalAngle = (2 * Math.PI - (angle % (2 * Math.PI))) % (2 * Math.PI);
+      const index = Math.floor((finalAngle) / arc) % participants.length;
       const winner = participants[index];
 
       winSound.play();
@@ -206,3 +214,4 @@
     drawWheel();
   </script></body>
 </html>
+
