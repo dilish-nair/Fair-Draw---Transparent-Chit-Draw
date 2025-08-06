@@ -20,14 +20,15 @@
       background-color: #f4f4f4;
     }
     h1 {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       text-align: center;
+      font-size: 20px;
     }
     canvas {
       max-width: 100%;
     }
     #controls {
-      margin-top: 20px;
+      margin-top: 15px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -41,33 +42,33 @@
       width: 100%;
     }
     #participantInput {
-      width: 80%;
+      width: 90%;
       height: 100px;
       padding: 10px;
-      font-size: 16px;
+      font-size: 14px;
       resize: vertical;
     }
     #addBtn {
-      margin-top: 10px;
-      padding: 8px 12px;
-      font-size: 16px;
+      margin-top: 8px;
+      padding: 6px 12px;
+      font-size: 14px;
       cursor: pointer;
     }
     #resetBtn, #spin {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 8px 16px;
+      font-size: 14px;
       cursor: pointer;
     }
     #needle {
       position: absolute;
-      top: 10%;
+      top: 8%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) rotate(180deg);
       width: 0;
       height: 0;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-bottom: 20px solid red;
+      border-top: 20px solid red;
       z-index: 10;
     }
     @media (max-width: 600px) {
@@ -80,7 +81,7 @@
 <body>
   <h1>FairDraw - Transparent Chit Draw</h1>
   <div id="needle"></div>
-  <canvas id="wheel" width="400" height="400"></canvas>  <div id="participants">
+  <canvas id="wheel" width="300" height="300"></canvas>  <div id="participants">
     <textarea id="participantInput" placeholder="Enter one participant per line: \n01 - Ravi\n02 - Neha\n..."></textarea>
     <button id="addBtn">Add Participants</button>
   </div>  <div id="controls">
@@ -95,7 +96,6 @@
     const resetBtn = document.getElementById("resetBtn");
     const addBtn = document.getElementById("addBtn");
     const participantInput = document.getElementById("participantInput");
-    const needle = document.getElementById("needle");
     const spinSound = document.getElementById("spinSound");
     const winSound = document.getElementById("winSound");
 
@@ -127,14 +127,17 @@
         ctx.beginPath();
         ctx.moveTo(radius, radius);
         ctx.arc(radius, radius, radius, startAngle, startAngle + arc);
+        ctx.closePath();
         ctx.fillStyle = i % 2 === 0 ? "#fdd835" : "#ff7043";
         ctx.fill();
+        ctx.strokeStyle = "#000";
+        ctx.stroke();
 
         ctx.save();
         ctx.translate(radius, radius);
         ctx.rotate(startAngle + arc / 2);
         ctx.fillStyle = "black";
-        ctx.font = "bold 14px Arial";
+        ctx.font = "bold 12px Arial";
         ctx.textAlign = "right";
         ctx.fillText(participants[i], radius - 10, 0);
         ctx.restore();
@@ -148,8 +151,8 @@
       let start = Date.now();
       let spins = Math.random() * 5 + 5;
       let totalAngle = spins * 2 * Math.PI;
-      spinSound.play();
 
+      spinSound.play();
       function animate() {
         let now = Date.now();
         let elapsed = now - start;
@@ -185,7 +188,7 @@
     function declareWinner() {
       const arc = (2 * Math.PI) / participants.length;
       const finalAngle = angle % (2 * Math.PI);
-      const index = Math.floor((2 * Math.PI - finalAngle + Math.PI / 2) % (2 * Math.PI) / arc);
+      const index = Math.floor((finalAngle + arc / 2) / arc) % participants.length;
       const winner = participants[index];
 
       winSound.play();
