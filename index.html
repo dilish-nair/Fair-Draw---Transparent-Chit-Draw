@@ -15,12 +15,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       padding: 10px;
       background-color: #f4f4f4;
     }
     h1 {
       margin-bottom: 20px;
+      text-align: center;
     }
     canvas {
       max-width: 100%;
@@ -41,8 +42,10 @@
     }
     #participantInput {
       width: 80%;
+      height: 100px;
       padding: 10px;
       font-size: 16px;
+      resize: vertical;
     }
     #addBtn {
       margin-top: 10px;
@@ -57,14 +60,14 @@
     }
     #needle {
       position: absolute;
-      top: 50%;
+      top: 10%;
       left: 50%;
-      transform: translate(-50%, -100%) rotate(0deg);
+      transform: translateX(-50%);
       width: 0;
       height: 0;
       border-left: 10px solid transparent;
       border-right: 10px solid transparent;
-      border-top: 20px solid red;
+      border-bottom: 20px solid red;
       z-index: 10;
     }
     @media (max-width: 600px) {
@@ -78,12 +81,14 @@
   <h1>FairDraw - Transparent Chit Draw</h1>
   <div id="needle"></div>
   <canvas id="wheel" width="400" height="400"></canvas>  <div id="participants">
-    <input type="text" id="participantInput" placeholder="Enter ID - Name (e.g., 01 - Ravi)" />
-    <button id="addBtn">Add Participant</button>
+    <textarea id="participantInput" placeholder="Enter one participant per line: \n01 - Ravi\n02 - Neha\n..."></textarea>
+    <button id="addBtn">Add Participants</button>
   </div>  <div id="controls">
     <button id="spin">Spin (30 sec)</button>
     <button id="resetBtn">Reset</button>
-  </div>  <script>
+  </div><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-03.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+
+  <script>
     const canvas = document.getElementById("wheel");
     const ctx = canvas.getContext("2d");
     const spinBtn = document.getElementById("spin");
@@ -91,28 +96,30 @@
     const addBtn = document.getElementById("addBtn");
     const participantInput = document.getElementById("participantInput");
     const needle = document.getElementById("needle");
+    const spinSound = document.getElementById("spinSound");
+    const winSound = document.getElementById("winSound");
 
     let participants = [];
     let angle = 0;
     let spinning = false;
 
     addBtn.onclick = () => {
-      const val = participantInput.value.trim();
-      if (val && !participants.includes(val)) {
-        participants.push(val);
-        drawWheel();
-        participantInput.value = "";
-      }
+      const lines = participantInput.value.trim().split("\n");
+      participants = lines.filter(line => line.trim() !== "");
+      drawWheel();
     };
 
     resetBtn.onclick = () => {
       participants = [];
+      participantInput.value = "";
       drawWheel();
     };
 
     function drawWheel() {
       const radius = canvas.width / 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (participants.length === 0) return;
       const arc = (2 * Math.PI) / participants.length;
 
       for (let i = 0; i < participants.length; i++) {
@@ -139,8 +146,9 @@
       spinning = true;
       let duration = 30000;
       let start = Date.now();
-      let spins = Math.random() * 10 + 10; // total rotations
+      let spins = Math.random() * 5 + 5;
       let totalAngle = spins * 2 * Math.PI;
+      spinSound.play();
 
       function animate() {
         let now = Date.now();
@@ -154,6 +162,8 @@
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
+          spinSound.pause();
+          spinSound.currentTime = 0;
           spinning = false;
           declareWinner();
         }
@@ -174,13 +184,15 @@
 
     function declareWinner() {
       const arc = (2 * Math.PI) / participants.length;
-      const degrees = (angle % (2 * Math.PI));
-      const index = participants.length - Math.floor(degrees / arc) - 1;
-      const winner = participants[(index + participants.length) % participants.length];
+      const finalAngle = angle % (2 * Math.PI);
+      const index = Math.floor((2 * Math.PI - finalAngle + Math.PI / 2) % (2 * Math.PI) / arc);
+      const winner = participants[index];
+
+      winSound.play();
 
       setTimeout(() => {
         alert(`🎉 Congratulations! The winner is: ${winner}`);
-      }, 200);
+      }, 500);
     }
 
     function easeOutCubic(t) {
