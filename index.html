@@ -149,7 +149,7 @@
 
     function declareWinner() {
   const normalized = angle % (2 * Math.PI);
-  const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI);
+  const adjusted = (2 * Math.PI - normalized + Math.PI) % (2 * Math.PI); // Shifted by 180°
   const index = Math.floor(adjusted / arc) % names.length;
   const winner = names[index];
   winSound.play();
@@ -157,7 +157,6 @@
     alert(`🎉 Congratulations ${winner}! You are the winner! 🎉`);
   }, 200);
 }
-
     function resetWheel() {
       names = [];
       angle = 0;
@@ -167,6 +166,7 @@
   </script>
 </body>
 </html>
+
 
 
 
