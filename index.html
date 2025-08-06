@@ -63,15 +63,14 @@
     }
     #needle {
       position: absolute;
-      top: 35px;
+      top: 5px;
       left: 50%;
-      transform: translateX(-50%) rotate(0deg);
-      width: 0;
-      height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 20px solid red;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 40px;
+      background-color: red;
       z-index: 10;
+      border-radius: 2px;
     }
     @media (max-width: 600px) {
       #participantInput {
@@ -89,7 +88,7 @@
   </div>  <div id="controls">
     <button id="spin">Spin (30 sec)</button>
     <button id="resetBtn">Reset</button>
-  </div><audio id="spinSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_78b28f97f4.mp3?filename=clicking-13695.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+  </div><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/gear-spin-1.mp3" preload="auto"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
 
   <script>
     const canvas = document.getElementById("wheel");
@@ -104,7 +103,6 @@
     let participants = [];
     let angle = 0;
     let spinning = false;
-    let spinInterval;
 
     addBtn.onclick = () => {
       const lines = participantInput.value.trim().split("\n");
@@ -156,11 +154,8 @@
       let spins = Math.random() * 5 + 5;
       let totalAngle = spins * 2 * Math.PI;
 
+      spinSound.currentTime = 0;
       spinSound.play();
-      spinInterval = setInterval(() => {
-        spinSound.currentTime = 0;
-        spinSound.play();
-      }, 300);
 
       function animate() {
         let now = Date.now();
@@ -174,7 +169,8 @@
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          clearInterval(spinInterval);
+          spinSound.pause();
+          spinSound.currentTime = 0;
           spinning = false;
           declareWinner();
         }
@@ -195,12 +191,11 @@
 
     function declareWinner() {
       const arc = (2 * Math.PI) / participants.length;
-      const finalAngle = (2 * Math.PI - (angle % (2 * Math.PI))) % (2 * Math.PI);
-      const index = Math.floor((finalAngle) / arc) % participants.length;
+      const finalAngle = (angle % (2 * Math.PI));
+      const index = Math.floor(((2 * Math.PI - finalAngle + arc / 2) % (2 * Math.PI)) / arc);
       const winner = participants[index];
 
       winSound.play();
-
       setTimeout(() => {
         alert(`🎉 Congratulations! The winner is: ${winner}`);
       }, 500);
@@ -214,4 +209,5 @@
     drawWheel();
   </script></body>
 </html>
+
 
