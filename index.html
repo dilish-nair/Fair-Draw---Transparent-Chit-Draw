@@ -4,122 +4,190 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FairDraw - Transparent Chit Draw</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
-      font-family: sans-serif;
-      text-align: center;
-      background-color: #f5f5f5;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 10px;
+      background-color: #f4f4f4;
     }
     h1 {
-      margin-top: 20px;
-    }
-    #input-area, #wheel-container {
-      margin: 20px auto;
-      width: 90%;
-      max-width: 500px;
-    }
-    #participants {
-      width: 100%;
-      height: 200px;
-    }
-    button {
-      padding: 10px 20px;
-      margin-top: 10px;
-      font-size: 16px;
-    }
-    #winner {
-      font-size: 24px;
-      font-weight: bold;
-      color: green;
-      margin-top: 20px;
+      margin-bottom: 20px;
     }
     canvas {
+      max-width: 100%;
+    }
+    #controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    #participants {
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       width: 100%;
+    }
+    #participantInput {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #addBtn {
+      margin-top: 10px;
+      padding: 8px 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #resetBtn, #spin {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #needle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -100%) rotate(0deg);
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 20px solid red;
+      z-index: 10;
+    }
+    @media (max-width: 600px) {
+      #participantInput {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>FairDraw - Transparent Chit Draw</h1>  <div id="input-area">
-    <p>Enter names and IDs (one per line, format: <b>ID - Name</b>)</p>
-    <textarea id="participants" placeholder="01 - Ravi\n02 - Meena\n03 - Ajay"></textarea><br/>
-    <button onclick="startDraw()">Start Draw</button>
-    <div id="winner"></div>
-  </div>  <div id="wheel-container" style="display: none">
-    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+  <h1>FairDraw - Transparent Chit Draw</h1>
+  <div id="needle"></div>
+  <canvas id="wheel" width="400" height="400"></canvas>  <div id="participants">
+    <input type="text" id="participantInput" placeholder="Enter ID - Name (e.g., 01 - Ravi)" />
+    <button id="addBtn">Add Participant</button>
+  </div>  <div id="controls">
+    <button id="spin">Spin (30 sec)</button>
+    <button id="resetBtn">Reset</button>
   </div>  <script>
-    let names = [];
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const spinBtn = document.getElementById("spin");
+    const resetBtn = document.getElementById("resetBtn");
+    const addBtn = document.getElementById("addBtn");
+    const participantInput = document.getElementById("participantInput");
+    const needle = document.getElementById("needle");
+
+    let participants = [];
+    let angle = 0;
     let spinning = false;
-    let canvas, ctx, angle = 0;
 
-    function startDraw() {
-      const input = document.getElementById("participants").value.trim();
-      if (!input) return alert("Please enter at least one participant.");
+    addBtn.onclick = () => {
+      const val = participantInput.value.trim();
+      if (val && !participants.includes(val)) {
+        participants.push(val);
+        drawWheel();
+        participantInput.value = "";
+      }
+    };
 
-      names = input.split("\n").map(line => line.trim()).filter(line => line);
-      if (names.length < 2) return alert("At least 2 participants required.");
-
-      document.getElementById("input-area").style.display = "none";
-      document.getElementById("wheel-container").style.display = "block";
-      document.getElementById("winner").textContent = "";
-
-      canvas = document.getElementById("wheelCanvas");
-      ctx = canvas.getContext("2d");
-
+    resetBtn.onclick = () => {
+      participants = [];
       drawWheel();
-      spinWheel();
-    }
+    };
 
-    function drawWheel(highlightIndex = -1) {
-      const len = names.length;
+    function drawWheel() {
       const radius = canvas.width / 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let i = 0; i < len; i++) {
-        const start = (2 * Math.PI * i) / len + angle;
-        const end = (2 * Math.PI * (i + 1)) / len + angle;
+      const arc = (2 * Math.PI) / participants.length;
+
+      for (let i = 0; i < participants.length; i++) {
+        const startAngle = i * arc;
         ctx.beginPath();
         ctx.moveTo(radius, radius);
-        ctx.arc(radius, radius, radius, start, end);
-        ctx.fillStyle = i % 2 === 0 ? '#ffcc00' : '#ff9900';
+        ctx.arc(radius, radius, radius, startAngle, startAngle + arc);
+        ctx.fillStyle = i % 2 === 0 ? "#fdd835" : "#ff7043";
         ctx.fill();
-        ctx.stroke();
 
         ctx.save();
         ctx.translate(radius, radius);
-        ctx.rotate((start + end) / 2);
+        ctx.rotate(startAngle + arc / 2);
+        ctx.fillStyle = "black";
+        ctx.font = "bold 14px Arial";
         ctx.textAlign = "right";
-        ctx.fillStyle = highlightIndex === i ? "red" : "black";
-        ctx.font = "16px sans-serif";
-        ctx.fillText(names[i], radius - 10, 5);
+        ctx.fillText(participants[i], radius - 10, 0);
         ctx.restore();
       }
     }
 
     function spinWheel() {
-      let duration = 30000; // 30 seconds
-      let start = null;
-      let spinSpeed = Math.PI / 30;
-      function animate(timestamp) {
-        if (!start) start = timestamp;
-        let progress = timestamp - start;
-        angle += spinSpeed;
-        drawWheel();
-        if (progress < duration) {
+      if (participants.length === 0 || spinning) return;
+      spinning = true;
+      let duration = 30000;
+      let start = Date.now();
+      let spins = Math.random() * 10 + 10; // total rotations
+      let totalAngle = spins * 2 * Math.PI;
+
+      function animate() {
+        let now = Date.now();
+        let elapsed = now - start;
+        let progress = elapsed / duration;
+        if (progress > 1) progress = 1;
+
+        angle = totalAngle * easeOutCubic(progress);
+        renderWheel(angle);
+
+        if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          stopWheel();
+          spinning = false;
+          declareWinner();
         }
       }
-      spinning = true;
-      requestAnimationFrame(animate);
+
+      animate();
     }
 
-    function stopWheel() {
-      spinning = false;
-      const index = names.length - Math.floor(((angle % (2 * Math.PI)) / (2 * Math.PI)) * names.length) - 1;
-      drawWheel(index);
-      const winner = names[index];
-      document.getElementById("winner").textContent = "🎉 Winner: " + winner + " 🎉";
-      const msg = new SpeechSynthesisUtterance("The winner is " + winner);
-      window.speechSynthesis.speak(msg);
+    function renderWheel(a) {
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(a);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+      drawWheel();
+      ctx.restore();
     }
+
+    function declareWinner() {
+      const arc = (2 * Math.PI) / participants.length;
+      const degrees = (angle % (2 * Math.PI));
+      const index = participants.length - Math.floor(degrees / arc) - 1;
+      const winner = participants[(index + participants.length) % participants.length];
+
+      setTimeout(() => {
+        alert(`🎉 Congratulations! The winner is: ${winner}`);
+      }, 200);
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    spinBtn.onclick = spinWheel;
+    drawWheel();
   </script></body>
 </html>
