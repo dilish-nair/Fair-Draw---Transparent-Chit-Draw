@@ -1,6 +1,4 @@
-
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -14,27 +12,13 @@
       background-color: #f9f9f9;
     }
     h1 {
-      font-size: 22px;
+      font-size: 20px;
       margin-bottom: 10px;
-    }
-    textarea {
-      width: 95%;
-      max-width: 400px;
-      height: 100px;
-      margin-bottom: 10px;
-      font-size: 16px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    button {
-      margin: 6px;
-      padding: 10px 20px;
-      font-size: 16px;
     }
     #wheel-container {
       position: relative;
       display: inline-block;
+      margin: 10px auto;
     }
     #needle {
       position: absolute;
@@ -42,31 +26,44 @@
       left: 50%;
       width: 0;
       height: 0;
-      border-left: 15px solid transparent;
-      border-right: 15px solid transparent;
-      border-top: 30px solid red;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-top: 20px solid red;
       transform: translateX(-50%);
       z-index: 2;
     }
     canvas {
       max-width: 90vw;
+      width: 300px;
+      height: 300px;
+    }
+    textarea {
+      width: 95%;
+      max-width: 300px;
+      height: 100px;
+      margin: 10px auto;
+      font-size: 16px;
+      display: block;
+    }
+    button {
+      margin: 6px;
+      padding: 10px 20px;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
   <h1>Fair Draw - Transparent Chit Draw</h1>
-  <textarea id="names" placeholder="Enter one name per line"></textarea><br>
-  <button onclick="setupWheel()">Set Participants</button>
   <div id="wheel-container">
-    <canvas id="wheel" width="400" height="400"></canvas>
+    <canvas id="wheel" width="300" height="300"></canvas>
     <div id="needle"></div>
   </div>
-  <br>
-  <button onclick="spinWheel()">Spin</button>
-  <button onclick="resetWheel()">Reset</button>
-
-  <audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio>
-  <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+  <textarea id="names" placeholder="Enter one name per line"></textarea>
+  <div>
+    <button onclick="setupWheel()">Set Participants</button>
+    <button onclick="spinWheel()">Spin</button>
+    <button onclick="resetWheel()">Reset</button>
+  </div><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
   <script>
     const canvas = document.getElementById('wheel');
@@ -96,7 +93,6 @@
         const startAngle = angle + i * arc;
         const endAngle = startAngle + arc;
 
-        // Draw segment
         ctx.beginPath();
         ctx.moveTo(radius, radius);
         ctx.arc(radius, radius, radius, startAngle, endAngle);
@@ -106,7 +102,6 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Add text
         ctx.save();
         ctx.translate(radius, radius);
         ctx.rotate(startAngle + arc / 2);
@@ -154,15 +149,15 @@
     }
 
     function declareWinner() {
-  const normalized = angle % (2 * Math.PI);
-  const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI); // Correct for 6 o'clock
-  const index = Math.floor(adjusted / arc) % names.length;
-  const winner = names[index];
-  winSound.play();
-  setTimeout(() => {
-    alert(`🎉 Congratulations ${winner}! You are the winner! 🎉`);
-  }, 200);
-}
+      const normalized = angle % (2 * Math.PI);
+      const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI);
+      const index = Math.floor(adjusted / arc) % names.length;
+      const winner = names[index];
+      winSound.play();
+      setTimeout(() => {
+        alert(`🎉 Congratulations ${winner}! You are the winner! 🎉`);
+      }, 200);
+    }
 
     function resetWheel() {
       names = [];
@@ -170,17 +165,5 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       document.getElementById('names').value = '';
     }
-  </script>
-</body>
+  </script></body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
