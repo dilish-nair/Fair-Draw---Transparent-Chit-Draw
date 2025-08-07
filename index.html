@@ -1,49 +1,44 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fair Draw - Transparent Chit Draw</title>
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 10px;
-      background-color: #f9f9f9;
-    }
-    h1 {
-      font-size: 22px;
-      margin-bottom: 10px;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    textarea {
-      width: 100%;
-      max-width: 300px;
-      height: 100px;
-      margin-bottom: 10px;
-      font-size: 16px;
-    }
-    .button-container {
       display: flex;
+      flex-direction: column;
+      align-items: center;
       justify-content: space-between;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    button {
-      flex: 1;
-      margin: 6px 3px;
+      background-color: #f9f9f9;
+      overflow: hidden;
       padding: 10px;
-      font-size: 14px;
+      box-sizing: border-box;
     }
-    #setBtn { background-color: yellow; color: black; }
-    #spinBtn { background-color: green; color: white; }
-    #resetBtn { background-color: blue; color: white; }
+
+    h1 {
+      font-size: 20px;
+      margin: 4px 0;
+      max-width: 400px;
+      text-align: center;
+    }
+
     #wheel-container {
       position: relative;
       display: inline-block;
     }
+
+    canvas {
+      width: 320px;
+      height: 320px;
+    }
+
     #needle {
       position: absolute;
       bottom: 0;
@@ -54,24 +49,54 @@
       transform: translateX(-50%);
       z-index: 2;
     }
-    canvas {
-      max-width: 90vw;
+
+    textarea {
+      width: 95%;
+      max-width: 300px;
+      height: 80px;
+      margin: 6px 0;
+      font-size: 14px;
     }
+
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: 400px;
+      margin-top: 4px;
+    }
+
+    button {
+      padding: 8px 12px;
+      font-size: 14px;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    #setBtn { background-color: yellow; color: black; }
+    #spinBtn { background-color: green; color: white; }
+    #resetBtn { background-color: blue; color: white; }
   </style>
 </head>
 <body>
   <h1>Fair Draw - Transparent Chit Draw</h1>
+
   <div id="wheel-container">
     <div id="needle"></div>
-    <canvas id="wheel" width="400" height="400"></canvas>
+    <canvas id="wheel" width="320" height="320"></canvas>
   </div>
-  <br>
-  <textarea id="names" placeholder="Enter one name per line"></textarea><br>
+
+  <textarea id="names" placeholder="Enter one name per line"></textarea>
+
   <div class="button-container">
     <button id="setBtn" onclick="setupWheel()">Set Participants</button>
     <button id="spinBtn" onmousedown="startSpin()" onmouseup="releaseSpin()">Spin</button>
     <button id="resetBtn" onclick="resetWheel()">Reset</button>
-  </div><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+  </div>
+
+  <audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio>
+  <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
   <script>
     const canvas = document.getElementById('wheel');
@@ -143,7 +168,7 @@
     function releaseSpin() {
       if (!spinning) return;
 
-      const holdDuration = 10000; // keep spinning fast for 10 seconds
+      const holdDuration = 10000; // 10 seconds of constant spin
       setTimeout(() => {
         stopRequested = true;
       }, holdDuration);
@@ -157,7 +182,7 @@
 
       if (stopRequested) {
         if (spinSpeed > 0.002) {
-          spinSpeed *= 0.985; // gradually reduce speed
+          spinSpeed *= 0.985; // Gradually slow down
           requestAnimationFrame(spinLoop);
         } else {
           spinning = false;
@@ -172,7 +197,7 @@
 
     function declareWinner() {
       const normalized = angle % (2 * Math.PI);
-      const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI); // shifted to 6 O'clock
+      const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI); // Align with needle at 6 O'clock
       const index = Math.floor(adjusted / arc) % names.length;
       const winner = names[index];
       winSound.play();
@@ -189,8 +214,10 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       document.getElementById('names').value = '';
     }
-  </script></body>
+  </script>
+</body>
 </html>
+
 
 
 
