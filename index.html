@@ -154,15 +154,15 @@
     }
 
     function declareWinner() {
-      const normalized = angle % (2 * Math.PI);
-      const adjusted = (2 * Math.PI - normalized + Math.PI) % (2 * Math.PI); // Adjust for 6 o'clock
-      const index = Math.floor(adjusted / arc) % names.length;
-      const winner = names[index];
-      winSound.play();
-      setTimeout(() => {
-        alert(`🎉 Congratulations ${winner}! You are the winner! 🎉`);
-      }, 200);
-    }
+  const normalized = angle % (2 * Math.PI);
+  const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI); // Correct for 6 o'clock
+  const index = Math.floor(adjusted / arc) % names.length;
+  const winner = names[index];
+  winSound.play();
+  setTimeout(() => {
+    alert(`🎉 Congratulations ${winner}! You are the winner! 🎉`);
+  }, 200);
+}
 
     function resetWheel() {
       names = [];
@@ -173,6 +173,7 @@
   </script>
 </body>
 </html>
+
 
 
 
