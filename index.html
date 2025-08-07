@@ -14,6 +14,9 @@
     h1 {
       font-size: 22px;
       margin-bottom: 10px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
     textarea {
       width: 95%;
@@ -26,43 +29,39 @@
       margin: 6px;
       padding: 10px 20px;
       font-size: 16px;
-      border: none;
-      color: white;
-      cursor: pointer;
+      width: 95%;
+      max-width: 400px;
     }
-    #setBtn { background-color: #FFD700; } /* Yellow */
-    #spinBtn { background-color: #28a745; } /* Green */
-    #resetBtn { background-color: #007BFF; } /* Blue */#wheel-container {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 10px;
-}
-#needle {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 20px solid red;
-  transform: translateX(-50%) rotate(0deg);
-  z-index: 2;
-}
-canvas {
-  max-width: 90vw;
-  height: auto;
-}
-@media (max-width: 480px) {
-  textarea {
-    width: 90%;
-  }
-  canvas {
-    width: 300px !important;
-    height: 300px !important;
-  }
-}
-
+    #setBtn {
+      background-color: yellow;
+      color: black;
+    }
+    #spinBtn {
+      background-color: green;
+      color: white;
+    }
+    #resetBtn {
+      background-color: blue;
+      color: white;
+    }
+    #wheel-container {
+      position: relative;
+      display: inline-block;
+    }
+    #needle {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      height: 50px;
+      background: red;
+      transform: translateX(-50%) rotate(0deg);
+      z-index: 2;
+    }
+    canvas {
+      max-width: 90vw;
+      height: auto;
+    }
   </style>
 </head>
 <body>
@@ -74,7 +73,7 @@ canvas {
   <br>
   <textarea id="names" placeholder="Enter one name per line"></textarea><br>
   <button id="setBtn" onclick="setupWheel()">Set Participants</button>
-  <button id="spinBtn" onmousedown="startSpinning()" onmouseup="stopSpinning()" ontouchstart="startSpinning()" ontouchend="stopSpinning()">Spin</button>
+  <button id="spinBtn" onmousedown="startSpin()" onmouseup="stopSpin()" ontouchstart="startSpin()" ontouchend="stopSpin()">Spin</button>
   <button id="resetBtn" onclick="resetWheel()">Reset</button><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
   <script>
@@ -88,7 +87,8 @@ canvas {
     let angle = 0;
     let arc = 0;
     let spinning = false;
-    let velocity = 0;
+    let spinSpeed = 0;
+    let animationFrame;
 
     function setupWheel() {
       const input = document.getElementById('names').value.trim();
@@ -107,6 +107,7 @@ canvas {
         const startAngle = angle + i * arc;
         const endAngle = startAngle + arc;
 
+        // Draw segment
         ctx.beginPath();
         ctx.moveTo(radius, radius);
         ctx.arc(radius, radius, radius, startAngle, endAngle);
@@ -116,6 +117,7 @@ canvas {
         ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Add text
         ctx.save();
         ctx.translate(radius, radius);
         ctx.rotate(startAngle + arc / 2);
@@ -127,45 +129,45 @@ canvas {
       });
     }
 
-    function startSpinning() {
+    function animateSpin() {
+      if (!spinning && spinSpeed <= 0) return;
+
+      angle += spinSpeed;
+      drawWheel();
+      spinSpeed *= 0.985;
+
+      if (spinSpeed < 0.002 && !spinning) {
+        cancelAnimationFrame(animationFrame);
+        spinSound.pause();
+        spinSound.currentTime = 0;
+        declareWinner();
+        return;
+      }
+      animationFrame = requestAnimationFrame(animateSpin);
+    }
+
+    function startSpin() {
       if (names.length < 2) {
         alert("Set participants first.");
         return;
       }
       spinning = true;
-      velocity = 0.5;
-      spinSound.loop = true;
+      spinSpeed = 0.25;
       spinSound.play();
-      requestAnimationFrame(updateSpin);
+      animateSpin();
     }
 
-    function stopSpinning() {
+    function stopSpin() {
+      if (!spinning) return;
       spinning = false;
-      spinSound.loop = false;
-    }
-
-    function updateSpin() {
-      if (!spinning && velocity > 0) {
-        velocity *= 0.97; // friction
-        if (velocity < 0.002) {
-          velocity = 0;
-          spinSound.pause();
-          spinSound.currentTime = 0;
-          declareWinner();
-          return;
-        }
-      } else if (!spinning) {
-        return;
-      }
-
-      angle += velocity;
-      drawWheel();
-      requestAnimationFrame(updateSpin);
+      setTimeout(() => {
+        spinSpeed = 0.05;
+      }, 10000); // Maintain speed for 10 seconds
     }
 
     function declareWinner() {
       const normalized = angle % (2 * Math.PI);
-      const adjusted = (2 * Math.PI - normalized + Math.PI) % (2 * Math.PI); // For 6 o'clock
+      const adjusted = (2 * Math.PI - normalized) % (2 * Math.PI); // 6 O'clock
       const index = Math.floor(adjusted / arc) % names.length;
       const winner = names[index];
       winSound.play();
@@ -177,10 +179,10 @@ canvas {
     function resetWheel() {
       names = [];
       angle = 0;
-      velocity = 0;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       document.getElementById('names').value = '';
     }
   </script></body>
 </html>
+
 
