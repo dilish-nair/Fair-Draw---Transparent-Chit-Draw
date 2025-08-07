@@ -19,31 +19,27 @@
       margin-right: auto;
     }
     textarea {
-      width: 95%;
-      max-width: 400px;
+      width: 100%;
+      max-width: 300px;
       height: 100px;
       margin-bottom: 10px;
       font-size: 16px;
     }
-    button {
-      margin: 6px;
-      padding: 10px 20px;
-      font-size: 16px;
-      width: 95%;
+    .button-container {
+      display: flex;
+      justify-content: space-between;
       max-width: 400px;
+      margin: 0 auto;
     }
-    #setBtn {
-      background-color: yellow;
-      color: black;
+    button {
+      flex: 1;
+      margin: 6px 3px;
+      padding: 10px;
+      font-size: 14px;
     }
-    #spinBtn {
-      background-color: green;
-      color: white;
-    }
-    #resetBtn {
-      background-color: blue;
-      color: white;
-    }
+    #setBtn { background-color: yellow; color: black; }
+    #spinBtn { background-color: green; color: white; }
+    #resetBtn { background-color: blue; color: white; }
     #wheel-container {
       position: relative;
       display: inline-block;
@@ -53,14 +49,13 @@
       bottom: 0;
       left: 50%;
       width: 2px;
-      height: 50px;
+      height: 40px;
       background: red;
-      transform: translateX(-50%) rotate(0deg);
+      transform: translateX(-50%);
       z-index: 2;
     }
     canvas {
       max-width: 90vw;
-      height: auto;
     }
   </style>
 </head>
@@ -68,13 +63,15 @@
   <h1>Fair Draw - Transparent Chit Draw</h1>
   <div id="wheel-container">
     <div id="needle"></div>
-    <canvas id="wheel" width="300" height="300"></canvas>
+    <canvas id="wheel" width="400" height="400"></canvas>
   </div>
   <br>
   <textarea id="names" placeholder="Enter one name per line"></textarea><br>
-  <button id="setBtn" onclick="setupWheel()">Set Participants</button>
-  <button id="spinBtn" onmousedown="startSpin()" onmouseup="stopSpin()" ontouchstart="startSpin()" ontouchend="stopSpin()">Spin</button>
-  <button id="resetBtn" onclick="resetWheel()">Reset</button><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
+  <div class="button-container">
+    <button id="setBtn" onclick="setupWheel()">Set Participants</button>
+    <button id="spinBtn" onmousedown="startSpin()" onmouseup="releaseSpin()">Spin</button>
+    <button id="resetBtn" onclick="resetWheel()">Reset</button>
+  </div><audio id="spinSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-gear-1.mp3"></audio> <audio id="winSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3"></audio>
 
   <script>
     const canvas = document.getElementById('wheel');
@@ -87,8 +84,9 @@
     let angle = 0;
     let arc = 0;
     let spinning = false;
+    let stopRequested = false;
     let spinSpeed = 0;
-    let animationFrame;
+    let holdStartTime;
 
     function setupWheel() {
       const input = document.getElementById('names').value.trim();
@@ -129,45 +127,52 @@
       });
     }
 
-    function animateSpin() {
-      if (!spinning && spinSpeed <= 0) return;
-
-      angle += spinSpeed;
-      drawWheel();
-      spinSpeed *= 0.985;
-
-      if (spinSpeed < 0.002 && !spinning) {
-        cancelAnimationFrame(animationFrame);
-        spinSound.pause();
-        spinSound.currentTime = 0;
-        declareWinner();
-        return;
-      }
-      animationFrame = requestAnimationFrame(animateSpin);
-    }
-
     function startSpin() {
       if (names.length < 2) {
         alert("Set participants first.");
         return;
       }
+      spinSpeed = 0.4;
       spinning = true;
-      spinSpeed = 0.25;
+      stopRequested = false;
+      holdStartTime = performance.now();
       spinSound.play();
-      animateSpin();
+      requestAnimationFrame(spinLoop);
     }
 
-    function stopSpin() {
+    function releaseSpin() {
       if (!spinning) return;
-      spinning = false;
+
+      const holdDuration = 10000; // keep spinning fast for 10 seconds
       setTimeout(() => {
-        spinSpeed = 0.05;
-      }, 10000); // Maintain speed for 10 seconds
+        stopRequested = true;
+      }, holdDuration);
+    }
+
+    function spinLoop(time) {
+      if (!spinning) return;
+
+      angle += spinSpeed;
+      drawWheel();
+
+      if (stopRequested) {
+        if (spinSpeed > 0.002) {
+          spinSpeed *= 0.985; // gradually reduce speed
+          requestAnimationFrame(spinLoop);
+        } else {
+          spinning = false;
+          spinSound.pause();
+          spinSound.currentTime = 0;
+          declareWinner();
+        }
+      } else {
+        requestAnimationFrame(spinLoop);
+      }
     }
 
     function declareWinner() {
       const normalized = angle % (2 * Math.PI);
-      const adjusted = (2 * Math.PI - normalized) % (2 * Math.PI); // 6 O'clock
+      const adjusted = (2 * Math.PI - normalized + Math.PI / 2) % (2 * Math.PI); // shifted to 6 O'clock
       const index = Math.floor(adjusted / arc) % names.length;
       const winner = names[index];
       winSound.play();
@@ -179,10 +184,13 @@
     function resetWheel() {
       names = [];
       angle = 0;
+      spinning = false;
+      stopRequested = false;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       document.getElementById('names').value = '';
     }
   </script></body>
 </html>
+
 
 
